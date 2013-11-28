@@ -1,104 +1,111 @@
 <!DOCTYPE html>
 <html>
-    <head>
+<head>
     <meta http-equiv="content-type" content="text/html;charset=utf-8">
     <title>Chromatic aberration Vis</title>
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <style type="text/css"></style>
-    </head>
-    <body>
+</head>
+<body>
 <div class="body">
-<div class="content">
-<div class="pane" id="pane-1"> </div>
-<form>
-    <label for="lensRadius">Lens radius</label><input id="lensRadiusInput" type="range" name="radius" value="lensRadius" min="1" max="100" step="1" />
-  </form>
+    <div class="content">
+        <div class="pane" id="pane-1"></div>
+        <form>
+            <label for="lensRadiusInput">Lens radius</label><input id="lensRadiusInput" type="range" name="radius"
+                                                                   value="lensRadius" min="1" max="100" step="1"/>
+        </form>
+    </div>
+</div>
 </body>
-    <script type='text/javascript'>
-      
-    var opticalAxis = 300;
-    
-    //var lensPower = 1/150;
-        
-    var deltaGreen = 0;
-    var deltaRed = 0.26;
-    var deltaBlue= -0.76;
-    
-    var lensRadius = 5.5 * 10; 
-    var nRed = 1.33110,
-    nGreen = 1.33639,
-    nBlue = 1.33861;
-    
-    
-    function getS(){
-        var imagePosX = parseFloat(d3.select("#image").attr("x"));
-        return -(imagePosX - getLensPosX()); 
-    }
-    
-    function setS(s){
-        d3.select("#image")
-        .attr("x", getLensPosX() + s)
-        .attr("transform", function(d,i){
+<script type='text/javascript'>
+
+var scale = Math.pow(10, 9);
+
+var opticalAxis = 300;
+
+//var lensPower = 1/150;
+
+var lensRadius = 5.5 * 10;
+
+function get_refractive_index(wavelength) {
+    return 1.32008 + 4.75654 / (wavelength - 214.102)
+}
+
+var nRed = get_refractive_index(650),
+        nGreen = get_refractive_index(510),
+        nBlue = get_refractive_index(475);
+
+
+function getS() {
+    var imagePosX = parseFloat(d3.select("#image").attr("x"));
+    return -(imagePosX - getLensPosX());
+}
+
+function setS(s) {
+    d3.select("#image")
+            .attr("x", getLensPosX() + s)
+            .attr("transform", function (d, i) {
                 return "translate(" + [ s + getLensPosX() ,
-                d.y ] + ")"
+                    d.y ] + ")"
             });
-    }
-    
-    function getSPrime(){
-        var focusPosX = parseFloat(d3.select("#focus").attr("x"));
-        return focusPosX - getLensPosX(); 
-    }
-    
-    function getLensPosX(){
-        return parseFloat(d3.select("#lens").attr("cx"));
-    }
-    
-    function getLensPower(r,n){
-        return (n-1.0)/r;
-    }
-    
-    function getLensPowerRed(){
-        return getLensPower(lensRadius, nRed)
-    }
-    
-    function getLensPowerGreen(){
-        return getLensPower(lensRadius, nGreen)
-    }
-    
-     function getLensPowerBlue(){
-        return getLensPower(lensRadius, nBlue)
-    }
-    
-   
-    var dragImage = d3.behavior.drag()
-        .on("drag", function(d,i) {
+}
+
+function getSPrime() {
+    var focusPosX = parseFloat(d3.select("#focus").attr("x"));
+    return focusPosX - getLensPosX();
+}
+
+function getLensPosX() {
+    return parseFloat(d3.select("#lens").attr("cx"));
+}
+
+function getLensPower(r, n) {
+    return (n - 1.0) / r;
+}
+
+function getLensPowerRed() {
+    return getLensPower(lensRadius, nRed)
+}
+
+function getLensPowerGreen() {
+    return getLensPower(lensRadius, nGreen)
+}
+
+function getLensPowerBlue() {
+    return getLensPower(lensRadius, nBlue)
+}
+
+
+var dragImage = d3.behavior.drag()
+        .on("drag", function (d, i) {
             d.x += d3.event.dx;
-            d3.select(this).attr("transform", function(d,i){
-                return "translate(" + [ d.x,d.y ] + ")"
+            d3.select(this).attr("transform", function (d, i) {
+                return "translate(" + [ d.x, d.y ] + ")"
             })
-            .attr("x", d.x);
-            
+                    .attr("x", d.x);
+
             updateFocusPlanes()
-            
+
         });
 
-    var svg = d3.select("body")
-        .append("svg:svg")
-		.attr("width", "100%")
-		.attr("height", "100%")
-		.attr("id", "charts")
 
-                      
-    var lens = svg.append("ellipse")
+var svg = d3.select("body")
+        .append("svg:svg")
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .attr("id", "charts")
+
+
+var lens = svg.append("ellipse")
         .attr("id", "lens")
         .attr("cx", 400)
         .attr("cy", opticalAxis)
         .attr("rx", 10)
         .attr("ry", 200)
         .attr("fill", "#555599");
-         
-    //optical axis
-    svg.append("line")
+
+//optical axis
+svg.append("line")
         .attr("x1", 0)
         .attr("y1", opticalAxis)
         .attr("x2", 99999)
@@ -106,128 +113,137 @@
         .attr("stroke-width", 2)
         .attr("stroke", "#CCCCCC")
         .style("stroke-dasharray", ("3, 3"));
-              
-              
-    // focal points
-    function makeFocalPoints(group, color, lensPower){
-        
-        svg.append("line")
-            .attr("x1", getLensPosX()+ 1/lensPower)
+
+
+// focal points
+function makeFocalPoints(group, color, lensPower) {
+
+    svg.append("line")
+            .attr("x1", getLensPosX() + 1 / lensPower)
             .attr("y1", opticalAxis - 5)
-            .attr("x2",  getLensPosX()+ 1/lensPower)
+            .attr("x2", getLensPosX() + 1 / lensPower)
             .attr("y2", opticalAxis + 5)
             .attr("stroke-width", 2)
             .attr("stroke", color)
             .attr("class", group)
             .attr("id", group + "-1")
-            
-        svg.append("line")
-            .attr("x1",  getLensPosX()- 1/lensPower)
+
+    svg.append("line")
+            .attr("x1", getLensPosX() - 1 / lensPower)
             .attr("y1", opticalAxis - 5)
-            .attr("x2",  getLensPosX()- 1/lensPower)
+            .attr("x2", getLensPosX() - 1 / lensPower)
             .attr("y2", opticalAxis + 5)
             .attr("stroke-width", 2)
             .attr("stroke", color)
             .attr("id", group + "-2")
-    }
+}
 
-    makeFocalPoints("red", "#FF0000", getLensPowerRed());
-    makeFocalPoints("green", "#00FF00", getLensPowerGreen());
-    makeFocalPoints("blue", "#0000FF", getLensPowerBlue());  
-   
-    function updateFocalPointsGroup(group, lensPower){
-        d3.select("#" +group + "-1")
-            .attr("x1", getLensPosX() + 1/lensPower)
-            .attr("x2",  getLensPosX() + 1/lensPower);
-        d3.select("#" +group + "-2")
-            .attr("x1", getLensPosX() - 1/lensPower)
-            .attr("x2",  getLensPosX() - 1/lensPower);
-    }
-    
-    function updateFocalPoints(){
-        updateFocalPointsGroup("red", getLensPowerRed());
-        updateFocalPointsGroup("green", getLensPowerGreen());
-        updateFocalPointsGroup("blue", getLensPowerBlue());  
-    }
-   
-	//focus planes
-   function makeFocusPlane(id, color){
+makeFocalPoints("red", "#FF0000", getLensPowerRed());
+makeFocalPoints("green", "#00FF00", getLensPowerGreen());
+makeFocalPoints("blue", "#0000FF", getLensPowerBlue());
 
-        svg.append("line")
+function updateFocalPointsGroup(group, lensPower) {
+    d3.select("#" + group + "-1")
+            .attr("x1", getLensPosX() + 1 / lensPower)
+            .attr("x2", getLensPosX() + 1 / lensPower);
+    d3.select("#" + group + "-2")
+            .attr("x1", getLensPosX() - 1 / lensPower)
+            .attr("x2", getLensPosX() - 1 / lensPower);
+}
+
+function updateFocalPoints() {
+    updateFocalPointsGroup("red", getLensPowerRed());
+    updateFocalPointsGroup("green", getLensPowerGreen());
+    updateFocalPointsGroup("blue", getLensPowerBlue());
+}
+
+//focus planes
+function makeFocusPlane(id, color) {
+
+    svg.append("line")
             .attr("id", id)
             .attr("x1", 0)
             .attr("y1", opticalAxis - 999)
-            .attr("x2",  0)
+            .attr("x2", 0)
             .attr("y2", opticalAxis + 999)
             .attr("fill-opacity", .0)
             .attr("stroke", color)
             .attr("stroke-width", 2)
             .style("stroke-dasharray", ("3, 3"));
 
-    }
-    
-    makeFocusPlane("focusRed", "#FF0000");
-    makeFocusPlane("focusGreen", "#00FF00");
-    makeFocusPlane("focusBlue", "#0000FF");
-    
-    function updateFocusPlanes(){
-    
-        var newSPrimeRed = Math.round( 1/(getLensPowerRed()-(1/getS())));            
-        var newSPrimeGreen = Math.round( 1/(getLensPowerGreen()-(1/getS())));
-        var newSPrimeBlue = Math.round( 1/(getLensPowerBlue()-(1/getS())));
-        
-        console.log("s: " + getS());
-        console.log("s'red: " + newSPrimeRed);
-        console.log("s'green: " + newSPrimeGreen);
-        console.log("s'blue: " + newSPrimeBlue);
-        
-        setSPrimeRed(newSPrimeRed);
-        setSPrimeGreen(newSPrimeGreen);
-        setSPrimeBlue(newSPrimeBlue);
-        
-    }
-    
-    function updateLinePos(line, pos){
-        line.attr("x1", pos)
+}
+
+makeFocusPlane("focusRed", "#FF0000");
+makeFocusPlane("focusGreen", "#00FF00");
+makeFocusPlane("focusBlue", "#0000FF");
+
+function updateFocusPlanes() {
+
+    var newSPrimeRed = Math.round(1 / (getLensPowerRed() - (1 / getS())));
+    var newSPrimeGreen = Math.round(1 / (getLensPowerGreen() - (1 / getS())));
+    var newSPrimeBlue = Math.round(1 / (getLensPowerBlue() - (1 / getS())));
+
+    console.log("s: " + getS());
+    console.log("s'red: " + newSPrimeRed);
+    console.log("s'green: " + newSPrimeGreen);
+    console.log("s'blue: " + newSPrimeBlue);
+
+    setSPrimeRed(newSPrimeRed);
+    setSPrimeGreen(newSPrimeGreen);
+    setSPrimeBlue(newSPrimeBlue);
+
+}
+
+function updateLinePos(line, pos) {
+    line.attr("x1", pos)
             .attr("x2", pos);
-    }
-    
-    function setSPrimeRed(sPrime){
-        updateLinePos(d3.select("#focusRed"), getLensPosX() + sPrime);
-    }
-    function setSPrimeGreen(sPrime){
-        updateLinePos(d3.select("#focusGreen"), getLensPosX() + sPrime);
-    }
-    function setSPrimeBlue(sPrime){
-        updateLinePos(d3.select("#focusBlue"), getLensPosX() + sPrime);
-    }
-    
-    
-    //image plane
-	var image = svg.append("svg:g")
-		.attr("id", "image")
-		.attr("transform", "translate(" + "10" + "," + opticalAxis + ")")
-		.data([ {"x":10, "y":opticalAxis} ])
-		.attr("x", function(d) { return d.x; })
-		.attr("y", function(d) { return opticalAxis; })
-		.call(dragImage);
-    
-	image.append("line")
-		.attr("x1", 0)
-		.attr("y1", 999)
-		.attr("x2", 0)
-		.attr("y2", -999)
-		.attr("stroke-width", 5)
-		.attr("stroke", "black");
-        
-    // radius slider
-    d3.select("#lensRadiusInput").on("change", function(){
-        lensRadius = parseFloat(d3.select("#lensRadiusInput").property("value"));
-        console.log("r: " + d3.select("#lensRadiusInput").property("value"));
-        updateFocusPlanes(); 
-        updateFocalPoints();        
-    });
-    
-    
+}
+
+function setSPrimeRed(sPrime) {
+    updateLinePos(d3.select("#focusRed"), getLensPosX() + sPrime);
+}
+function setSPrimeGreen(sPrime) {
+    updateLinePos(d3.select("#focusGreen"), getLensPosX() + sPrime);
+}
+function setSPrimeBlue(sPrime) {
+    updateLinePos(d3.select("#focusBlue"), getLensPosX() + sPrime);
+}
+
+
+//image plane
+var image = svg.append("svg:g")
+        .attr("id", "image")
+        .attr("transform", "translate(" + "10" + "," + opticalAxis + ")")
+        .data([
+            {"x": 10, "y": opticalAxis}
+        ])
+        .attr("x", function (d) {
+            return d.x;
+        })
+        .attr("y", function (d) {
+            return opticalAxis;
+        })
+        .call(dragImage);
+
+image.append("line")
+        .attr("x1", 0)
+        .attr("y1", 999)
+        .attr("x2", 0)
+        .attr("y2", -999)
+        .attr("stroke-width", 5)
+        .attr("stroke", "black");
+
+// radius slider
+d3.select("#lensRadiusInput").on("change", function () {
+    lensRadius = parseFloat(d3.select("#lensRadiusInput").property("value"));
+    console.log("r: " + d3.select("#lensRadiusInput").property("value"));
+    updateFocusPlanes();
+    updateFocalPoints();
+    //d3.select("#lens").attr("rx",1/(lensRadius);
+
+
+});
+
+
 </script>
 </html>
