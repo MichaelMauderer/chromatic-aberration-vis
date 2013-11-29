@@ -4,7 +4,18 @@
     <meta http-equiv="content-type" content="text/html;charset=utf-8">
     <title>Chromatic aberration Vis</title>
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-    <style type="text/css"></style>
+    <style type="text/css">
+        .axis text {
+            font: 10px sans-serif;
+        }
+
+        .axis > path,
+        .axis > line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+    </style>
 </head>
 <body>
 <div class="body">
@@ -19,16 +30,16 @@
 </body>
 <script type='text/javascript'>
 
-var scale = Math.pow(10, 9);
+var y_offset = 400;
+var x_offset = 800;
 
-var opticalAxis = 300;
 
 //var lensPower = 1/150;
 
 var lensRadius = 5.5 * 10;
 
 function get_refractive_index(wavelength) {
-    return 1.32008 + 4.75654 / (wavelength - 214.102)
+    return 1.32008 + 4.75654 / (wavelength - 214.102);
 }
 
 var nRed = get_refractive_index(650),
@@ -94,45 +105,51 @@ var svg = d3.select("body")
         .attr("width", "100%")
         .attr("height", "100%")
         .attr("id", "charts")
+        .append("svg:g")
+        .attr("transform", "scale(" + 0.01 +"," + 0.01 + ")")
+        .attr("transform", "translate(" + x_offset +"," + y_offset + ")")
+        ;
 
 
 var lens = svg.append("ellipse")
         .attr("id", "lens")
-        .attr("cx", 400)
-        .attr("cy", opticalAxis)
+        .attr("cx", 0)
+        .attr("cy", 0)
         .attr("rx", 10)
         .attr("ry", 200)
         .attr("fill", "#555599");
 
 //optical axis
-svg.append("line")
-        .attr("x1", 0)
-        .attr("y1", opticalAxis)
-        .attr("x2", 99999)
-        .attr("y2", opticalAxis)
-        .attr("stroke-width", 2)
-        .attr("stroke", "#CCCCCC")
-        .style("stroke-dasharray", ("3, 3"));
+var x = d3.scale.identity()
+        .domain([-900, 900]);
 
+var xAxis = d3.svg.axis()
+                .scale(x)
+                .tickSize(1);
+
+
+svg.append("g")
+        .attr("class", "x axis")
+        .call(xAxis);
 
 // focal points
 function makeFocalPoints(group, color, lensPower) {
 
     svg.append("line")
             .attr("x1", getLensPosX() + 1 / lensPower)
-            .attr("y1", opticalAxis - 5)
+            .attr("y1", - 5)
             .attr("x2", getLensPosX() + 1 / lensPower)
-            .attr("y2", opticalAxis + 5)
+            .attr("y2",  5)
             .attr("stroke-width", 2)
             .attr("stroke", color)
             .attr("class", group)
-            .attr("id", group + "-1")
+            .attr("id", group + "-1");
 
     svg.append("line")
             .attr("x1", getLensPosX() - 1 / lensPower)
-            .attr("y1", opticalAxis - 5)
+            .attr("y1", - 5)
             .attr("x2", getLensPosX() - 1 / lensPower)
-            .attr("y2", opticalAxis + 5)
+            .attr("y2", + 5)
             .attr("stroke-width", 2)
             .attr("stroke", color)
             .attr("id", group + "-2")
@@ -163,9 +180,9 @@ function makeFocusPlane(id, color) {
     svg.append("line")
             .attr("id", id)
             .attr("x1", 0)
-            .attr("y1", opticalAxis - 999)
+            .attr("y1", - 999)
             .attr("x2", 0)
-            .attr("y2", opticalAxis + 999)
+            .attr("y2",  999)
             .attr("fill-opacity", .0)
             .attr("stroke", color)
             .attr("stroke-width", 2)
@@ -213,15 +230,15 @@ function setSPrimeBlue(sPrime) {
 //image plane
 var image = svg.append("svg:g")
         .attr("id", "image")
-        .attr("transform", "translate(" + "10" + "," + opticalAxis + ")")
+        .attr("transform", "translate(" + "10" + "," + 0 + ")")
         .data([
-            {"x": 10, "y": opticalAxis}
+            {"x": 10, "y": 0}
         ])
         .attr("x", function (d) {
             return d.x;
         })
         .attr("y", function (d) {
-            return opticalAxis;
+            return 0;
         })
         .call(dragImage);
 
